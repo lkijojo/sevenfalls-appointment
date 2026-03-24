@@ -1,0 +1,335 @@
+/* -------------------------------------------------------------------------- */
+/* 🌿 Seven Falls SPA UI - 黄金比例舒适版 (侧边栏加宽) */
+/* -------------------------------------------------------------------------- */
+
+:root { 
+    --primary: #319795; 
+    --red: #e53e3e; 
+    --bg: #f8fafc; 
+    --sidebar-width: 400px; /* 🚀 调大侧边栏宽度，让录入更舒服 */
+}
+
+body { 
+    font-family: "Segoe UI", system-ui, sans-serif; 
+    background: var(--bg); 
+    margin: 0; 
+    color: #2d3748;
+}
+
+/* 主容器：增加内边距，更有呼吸感 */
+.main-container { 
+    display: flex; 
+    gap: 20px; 
+    padding: 20px; 
+    max-width: 1800px; /* 适配大显示器 */
+    margin: 0 auto;
+}
+
+/* --- 1. 左侧录入：加宽并优化间距 --- */
+.sidebar { 
+    flex: 0 0 var(--sidebar-width); 
+    background: white; 
+    padding: 24px; 
+    border-radius: 16px; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    position: sticky; 
+    top: 20px; 
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+.sidebar h3 { font-size: 18px; margin-top: 0; color: var(--primary); margin-bottom: 20px; }
+
+.form-group { margin-bottom: 16px; }
+label { font-size: 13px; font-weight: 600; margin-bottom: 8px; display: block; color: #4a5568; }
+
+/* 🚀 调大输入框，操作更精准 */
+select, input { 
+    padding: 10px 14px; 
+    border: 1.5px solid #e2e8f0; 
+    border-radius: 10px; 
+    font-size: 14px; 
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+}
+
+select:focus, input:focus { 
+    border-color: var(--primary); 
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(49, 151, 149, 0.1);
+}
+
+/* --- 2. 房间看板：竖版紧凑展示 --- */
+#room-board { 
+    display: grid; 
+    grid-template-columns: repeat(5, 1fr); 
+    gap: 10px; 
+    margin-bottom: 16px;
+}
+
+#room-board .card { 
+    background: white; 
+    border: 1px solid #e2e8f0; 
+    border-radius: 12px; 
+    padding: 8px !important;
+    overflow: visible !important; 
+}
+
+#room-board .card > div:first-child {
+    font-size: 14px;
+    font-weight: 700;
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #edf2f7;
+    text-align: center;
+}
+
+.status-capsule {
+    font-size: 11px !important;
+    padding: 6px 4px !important;
+    margin: 4px 0 !important;
+    border-radius: 6px !important;
+    text-align: center;
+    font-weight: 600;
+    line-height: 1.4 !important;
+}
+
+/* --- 3. 技师管理：整齐标签化 --- */
+#attendance-toggles { 
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: 6px; 
+    margin-bottom: 12px; 
+}
+
+#attendance-toggles label { 
+    font-size: 11px; 
+    padding: 4px 10px; 
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+/* --- 🚀 技师管理：双行大标签版 --- */
+/* --- 🚀 技师管理：完美 6 列布局 --- */
+#staff-board { 
+    display: grid; 
+    /* 🚀 核心修改：通过 calc 计算，确保在大宽屏下也能精准维持 6 列 */
+    grid-template-columns: repeat(6, 1fr); 
+    gap: 8px; 
+    margin-bottom: 20px;
+}
+
+/* --- 🚀 技师管理：微调高度与饱满度 --- */
+#staff-board .card { 
+    /* 🚀 修改点：将上下 padding 从 6px 增加到 9px */
+    padding: 9px 10px !important; 
+    display: flex; 
+    flex-direction: row !important; 
+    justify-content: space-between; 
+    align-items: center;
+    background: #fff;
+    border: 1.5px solid #edf2f7;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+    transition: all 0.2s;
+    /* 设定一个微小的最小高度，确保视觉统一 */
+    min-height: 38px; 
+    box-sizing: border-box;
+}
+
+#staff-board .card b { 
+    font-size: 13px; 
+    color: #2d3748; 
+    white-space: nowrap; 
+}
+
+#staff-board .card span { 
+    font-size: 11px; 
+    color: var(--primary); 
+    font-weight: bold; 
+    background: #e6fffa; 
+    padding: 2px 6px; /* 让分数的胶囊也稍微胖一点点 */
+    border-radius: 5px;
+}
+
+/* --- 4. 订单列表：卡片式表格 --- */
+.content { flex: 1; min-width: 0; }
+.content h3 { font-size: 17px; margin: 0 0 12px 0; }
+
+table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
+th { font-size: 12px; color: #718096; padding: 10px; border-bottom: 1px solid #edf2f7; }
+td { padding: 14px 10px; font-size: 14px; background: white; border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; }
+td:first-child { border-left: 1px solid #f1f5f9; border-radius: 10px 0 0 10px; }
+td:last-child { border-right: 1px solid #f1f5f9; border-radius: 0 10px 10px 0; }
+
+/* 按钮美化 */
+/* --- 按钮美化与间距优化 --- */
+.btn-save { 
+    background: var(--primary); 
+    color: white; 
+    border: none; 
+    padding: 12px; 
+    border-radius: 10px; 
+    width: 100%; 
+    cursor: pointer; 
+    font-weight: bold; 
+    font-size: 15px; 
+    transition: 0.2s;
+    /* 🚀 核心修改：增加底部间距，把删除按钮推开 */
+    margin-bottom: 20px; 
+}
+
+.btn-save:hover { 
+    background: #2c7a7b; 
+    transform: translateY(-1px); 
+}
+
+/* 🗑️ 删除按钮：变得更轻量，防止误触 */
+#delete-selected-btn {
+    background: transparent !important;
+    color: #a0aec0 !important; /* 默认灰色 */
+    border: 1px solid #e2e8f0 !important;
+    padding: 8px !important;
+    font-size: 12px !important;
+    width: 100%;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-top: 10px;
+}
+
+#delete-selected-btn:hover {
+    color: var(--red) !important;
+    border-color: #c77373 !important;
+    background: #fff5f5 !important;
+}
+/* ========================================================= */
+/* 📱 手机端响应式适配 (max-width: 768px)                     */
+/* ========================================================= */
+@media (max-width: 768px) {
+
+    body {
+        padding: 0;
+        overflow-x: hidden; /* 防止横向溢出灰条 */
+    }
+
+    /* 主容器：竖向堆叠，不再并排 */
+    .main-container {
+        flex-direction: column;
+        gap: 12px;
+        padding: 12px;
+        max-width: 100%;
+    }
+
+    /* 左侧录入区：不再 sticky，撑满宽度 */
+    .sidebar {
+        flex: none;
+        width: 100%;
+        position: static;
+        max-height: none;
+        overflow-y: visible;
+        padding: 16px;
+        border-radius: 12px;
+        box-sizing: border-box;
+    }
+
+    /* 右侧内容区：撑满宽度 */
+    .content {
+        width: 100%;
+        padding: 16px;
+        border-radius: 12px;
+        box-sizing: border-box;
+    }
+
+    /* 房间看板：手机上改为 2 列 */
+    #room-board {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    /* 技师积分看板：手机上改为 3 列 */
+    #staff-board {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+    }
+
+    /* 技师实时忙碌看板：横向滚动，每张卡片固定宽度 */
+    #staff-busy-board {
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 8px;
+        gap: 6px !important;
+        /* 隐藏滚动条但保留滚动功能 */
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    #staff-busy-board::-webkit-scrollbar {
+        display: none;
+    }
+
+    #staff-busy-board .card {
+        min-width: 100px !important;
+        flex: 0 0 100px !important; /* 手机上固定宽度，桌面上 JS 的 flex:1 仍然生效 */
+        box-sizing: border-box;
+        width: 100px !important;
+    }
+
+    /* 出勤管理 checkbox 列表：竖向堆叠改为横向自动换行 */
+    #attendance-toggles {
+        gap: 8px;
+    }
+
+    #attendance-toggles label {
+        font-size: 13px;
+        padding: 6px 12px;
+    }
+
+    /* 订单表格：手机上字体缩小，防止撑破 */
+    table {
+        font-size: 12px;
+    }
+
+    th, td {
+        padding: 8px 6px;
+        font-size: 12px;
+    }
+
+    /* 今日订单列表顶部工具栏：竖向堆叠 */
+    .content > div[style*="justify-content: space-between"] {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 10px;
+    }
+
+    /* 搜索框：手机上撑满宽度 */
+    #order-search {
+        width: 100% !important;
+    }
+
+    /* 一键分配按钮组：允许换行 */
+    .content > div > div[style*="align-items: center"] {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    /* 班次弹窗：手机上撑满屏幕 */
+    #shift-modal > div {
+        min-width: unset !important;
+        width: calc(100% - 32px);
+        max-height: 90vh;
+        overflow-y: auto;
+        margin: 0 16px;
+    }
+
+    /* 推荐积木列表：手机上 3 列 */
+    .suggest-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+}

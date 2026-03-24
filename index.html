@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Seven Falls SPA 预约管理系统</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- 🔒 密码保护：sessionStorage 记住本次会话，切换日期不再重复验证 -->
+    <script>
+        if (sessionStorage.getItem('spa_auth') !== '1') {
+            const pwd = prompt("请输入访问密码：");
+            if (pwd !== "1077") {
+                document.documentElement.innerHTML = "<h2 style='text-align:center;margin-top:200px;color:#999'>访问被拒绝</h2>";
+                window.stop();
+            } else {
+                sessionStorage.setItem('spa_auth', '1');
+            }
+        }
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0f4f8; margin: 0; padding: 20px; color: #2d3748; }
+        .main-container { display: flex; gap: 20px; max-width: 98%; margin: 0 auto; align-items: flex-start; }
+        
+       /* 左侧录入区：锁定在屏幕左侧，内容过多时内部可滚动 */
+        /* 1. 核心布局修复：确保左侧侧边栏宽度固定且美观 */
+.sidebar { 
+    flex: 0 0 380px; 
+    background: white; 
+    padding: 25px; 
+    border-radius: 16px; 
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); 
+    position: sticky; 
+    top: 20px; 
+    max-height: calc(100vh - 40px);
+    overflow-y: auto; 
+    box-sizing: border-box; /* 确保 padding 不撑大宽度 */
+}
+
+/* 2. 核心元素修复：让所有下拉框和输入框整齐划一 */
+.form-group { margin-bottom: 16px; }
+
+label { 
+    display: block; 
+    margin-bottom: 6px; 
+    font-weight: 600; 
+    font-size: 14px; 
+    color: #4a5568; 
+}
+
+/* 这一步最关键：解决你截图里输入框太短的问题 */
+select, input { 
+    width: 100%; 
+    padding: 10px; 
+    border: 1.5px solid #e2e8f0; 
+    border-radius: 8px; 
+    font-size: 14px; 
+    transition: border-color 0.2s; 
+    box-sizing: border-box; /* 强制宽度包含边框 */
+    display: block;
+}
+
+select:focus, input:focus { 
+    outline: none; 
+    border-color: #319795; 
+}
+
+/* 3. 智能推荐时间的网格修复 */
+.suggest-grid { 
+    display: grid; 
+    grid-template-columns: repeat(4, 1fr); /* 强制 4 列排列 */
+    gap: 8px; 
+    margin-top: 10px;
+}
+        
+        /* 智能推荐时间样式 */
+        #smart-suggestions { margin-top: 10px; background: #f7fafc; padding: 12px; border-radius: 10px; border: 1px solid #edf2f7; display: none; }
+        .suggest-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; max-height: 260px; overflow-y: auto; }
+        .suggest-item { padding: 8px 4px; border: 1px solid #cbd5e0; border-radius: 6px; text-align: center; cursor: pointer; transition: all 0.2s; font-size: 12px; background: white; }
+        .suggest-item b { font-size: 13px; display: block; }
+        .suggest-item small { font-size: 10px; color: #718096; }
+        .suggest-item:hover { border-color: #319795; background: #e6fffa; transform: translateY(-1px); }
+        .suggest-full { background: #fff5f5 !important; border-color: #feb2b2 !important; color: #c53030 !important; cursor: not-allowed !important; opacity: 0.7; }
+
+        /* 右侧展示区 */
+        .content { flex: 1; background: white; padding: 25px; border-radius: 16px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; margin: 15px 0; }
+        .card { padding: 12px; border-radius: 10px; text-align: center; font-size: 13px; border: 1px solid #edf2f7; transition: transform 0.2s; }
+        .available { background: #f0fff4; border-color: #c6f6d5; color: #276749; }
+        .busy { background: #fff5f5; border-color: #fed7d7; color: #c53030; }
+        
+        /* 按钮样式 */
+        .btn-save { background: #319795; color: white; border: none; padding: 14px; border-radius: 8px; width: 100%; cursor: pointer; font-weight: bold; font-size: 16px; margin-top: 10px; }
+        .btn-save:hover { background: #2c7a7b; }
+        .btn-clear { background: transparent; color: #e53e3e; border: 1px solid #feb2b2; padding: 10px; border-radius: 8px; width: 100%; cursor: pointer; font-size: 13px; margin-top: 15px; }
+        .btn-clear:hover { 
+    background: #fff5f5; 
+    border-color: #e53e3e; /* 悬停时边框变深红 */
+    box-shadow: 0 0 8px rgba(229, 62, 62, 0.2);
+}
+
+        /* 列表样式 */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { background: #f7fafc; padding: 12px; text-align: center; font-size: 13px; color: #4a5568; border-bottom: 2px solid #edf2f7; }
+        td { padding: 12px; text-align: center; font-size: 14px; border-bottom: 1px solid #edf2f7; }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <div class="sidebar">
+        <h3>🌿 预约录入</h3>
+        
+        <div class="form-group">
+            <label>日期</label>
+            <input type="date" id="book-date" oninput="window.location.href='?date='+this.value">
+        </div>
+        
+        <div class="form-group">
+            <label>客人姓名 (Name)</label>
+            <input type="text" id="customer-name" placeholder="请输入客人姓名">
+        </div>
+
+        <div class="form-group">
+            <label>项目大类 (Category)</label>
+            <select id="main-category" onchange="window.updateSubItems()">
+                <option value="">--请选择大类--</option>
+                <option value="body">身体项目 (Body)</option>
+                <option value="foot">足疗项目 (Foot)</option>
+                <option value="facial">面部项目 (Facial)</option>
+                <option value="combo">混合项目 (Combo)</option>
+            </select>
+        </div>
+
+        <div class="form-group" id="treatment-group" style="display:none">
+            <label>手法 (Treatment)</label>
+            <select id="treatment-select">
+                <option value="Sw">Swedish (Sw)</option>
+                <option value="D">Deep Tissue (D)</option>
+                <option value="Target">Target</option>
+            </select>
+        </div>
+
+        <div class="form-group" id="combo-order-wrapper" style="display: none;">
+    <label>项目执行顺序 (Affects Room)</label>
+    <select id="combo-order" class="form-select">
+    <option value="" selected>未选择 (Not Selected)</option>
+    <option value="body-first">先做身体 (Body First)</option>
+    <option value="foot-first">先做脚 (Foot First)</option>
+</select>
+</div>
+
+        <div class="form-group">
+            <label>具体规格 (时长)</label>
+            <div style="display: flex; gap: 8px;">
+                <select id="sub-item-select" style="flex: 1;"></select>
+                <button type="button" onclick="window.addProjectToList()" style="width: 60px; background: #319795; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">+加项</button>
+            </div>
+            
+            <div id="selected-projects-list" style="margin-top: 10px; background: #e6fffa; padding: 10px; border-radius: 8px; border: 1px dashed #319795; display: none;">
+                <label style="color: #2c7a7b; font-size: 12px; margin-bottom: 5px; font-weight: bold;">已选项目清单：</label>
+                <div id="project-items-container"></div>
+                <div id="total-duration-display" style="margin-top: 8px; font-weight: bold; color: #2d3748; border-top: 1px solid #b2f5ea; padding-top: 5px; font-size: 13px;">
+                    总计时长: 0 分钟
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:normal;">
+                <input type="checkbox" id="couple-mode" style="width:auto"> 👫 情侣模式 (强制 Room 5)
+            </label>
+        </div> 
+
+        <div class="form-group">
+            <label>想要的时间 (点击弹出推荐)</label>
+            <input type="time" id="book-time">
+            <div id="smart-suggestions">
+                <div id="suggest-list" class="suggest-grid"></div>
+            </div>
+        </div>
+<div class="form-group">
+    <label>分配房间 (Room)</label>
+    <select id="room-select">
+        <option value="AUTO">✨ 自动分配 (最佳空档)</option>
+        <option value="1">Room 1</option>
+        <option value="2">Room 2</option>
+        <option value="3">Room 3</option>
+        <option value="4">Room 4</option>
+        <option value="5">Room 5 (Couple)</option>
+    </select>
+</div>
+        <div class="form-group">
+    <label>分配技师</label>
+    <select id="staff-1"></select>
+    
+    <select id="staff-2" style="display:none; margin-top:8px;"></select>
+    <div style="margin-top: 10px; margin-bottom: 5px;">
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold; color: #805AD5; background: #FAF5FF; padding: 6px 12px; border-radius: 8px; border: 1.5px solid #E9D8FD; width: fit-content; font-size: 13px;">
+                <input type="checkbox" id="is-request" style="width:auto"> ⭐ 客人指定 (Request)
+            </label>
+        </div>
+</div>
+
+        <button id="save-btn" class="btn-save">保存预约</button>
+        <button id="delete-selected-btn" onclick="window.deleteSelectedAppts()" class="btn-clear" style="width:100%; margin-top:10px; padding:12px; font-weight:bold; font-size:14px;">
+    🗑️ 删除已选订单 (Delete Selected)
+</button>
+<div style="margin-top: 20px; padding: 15px; background: #f8fafc; border: 1.5px dashed #cbd5e0; border-radius: 12px;">
+    <h4 style="font-size: 14px; margin: 0 0 8px 0; color: #4a5568; display: flex; align-items: center; gap: 5px;">
+        <span>📊</span> Square 数据导入
+    </h4>
+    <textarea id="import-json" placeholder="请在这里粘贴 Gemini 整理好的订单代码..." 
+              style="width: 100%; height: 80px; font-size: 12px; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px; resize: none; background: white; box-sizing: border-box;"></textarea>
+    <button id="import-btn" 
+            style="width: 100%; margin-top: 8px; background: #4a5568; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">
+        🚀 执行批量导入
+    </button>
+    <div style="margin-top: 20px; padding: 15px; background: #EBF8FF; border: 1.5px solid #3182CE; border-radius: 12px;">
+    <h4 style="font-size: 14px; margin: 0 0 8px 0; color: #2C5282;">数据同步 (Sync)</h4>
+    <div style="display: flex; gap: 8px;">
+        <button onclick="window.exportDailyData()" style="flex: 1; background: #3182CE; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: bold;">📤 导出备份</button>
+        <button onclick="window.importDailyData()" style="flex: 1; background: #63B3ED; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: bold;">📥 导入同步</button>
+    </div>
+    <p style="font-size: 10px; color: #4A5568; margin-top: 8px;">* 导出后发送到微信，在另一台电脑导入即可同步。</p>
+</div>
+</div>
+    </div>
+
+    <div class="content">
+        <h3>🏠 房间状态 (Room 1-5)</h3>
+        <div id="room-board" class="card-grid"></div>
+
+        <hr style="border:0; border-top:1px solid #edf2f7; margin:25px 0">
+        <h3 style="margin-top: 20px;">👤 技师实时忙碌状态</h3>
+<div id="staff-busy-board" style="display: flex; flex-wrap: nowrap; gap: 4px; margin-bottom: 30px; width: 100%; justify-content: space-between; overflow-x: auto; -webkit-overflow-scrolling: touch;">
+    </div>
+
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+    <h3 style="margin:0;">👥 技师出勤管理 (默认排除 Fei)</h3>
+    <button onclick="window.openShiftModal()" 
+        style="padding:6px 14px; background:#EBF8FF; color:#3182CE; border:1.5px solid #BEE3F8; border-radius:8px; cursor:pointer; font-size:12px; font-weight:600;">
+        🕐 设置班次时间
+    </button>
+</div>
+        <div style="margin-bottom: 15px; display: flex; gap: 15px; align-items: center;">
+            <label style="font-weight:normal; font-size:13px; color:#e53e3e; cursor:pointer;">
+                <input type="checkbox" id="exclude-male" style="width:auto"> 🚫 不要男技师 (No Male)
+            </label>
+        </div>
+        <div id="attendance-toggles" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px;"></div>
+        <div id="staff-board" class="card-grid"></div>
+
+        <hr style="border:0; border-top:1px solid #edf2f7; margin:25px 0">
+
+       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; width: 100%;">
+            
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <h3 style="margin: 0; white-space: nowrap;">📝 今日订单列表</h3>
+                
+                <button id="fair-reassign-btn" onclick="window.reassignSelectedAppts()"
+                        style="padding: 8px 18px; background: rgba(49, 130, 206, 0.1); color: #3182ce; border: none; border-radius: 20px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; display: flex; align-items: center; gap: 6px; white-space: nowrap;"
+                        onmouseover="this.style.background='rgba(49, 130, 206, 0.18)'; this.style.transform='translateY(-1px)'" 
+                        onmouseout="this.style.background='rgba(49, 130, 206, 0.1)'; this.style.transform='translateY(0)'"
+                        onmousedown="this.style.transform='scale(0.96)'"
+                        onmouseup="this.style.transform='scale(1)'">
+                    <span style="font-size: 14px;">🔄</span> 一键公平分配 (仅勾选项)
+                </button>
+                <button id="auto-room-btn" onclick="window.autoAssignRooms()"
+                style="padding: 8px 18px; background: rgba(49, 130, 206, 0.1); color: #2c5282; border: none; border-radius: 20px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; display: flex; align-items: center; gap: 6px; white-space: nowrap; margin-left: 10px;"
+                 onmouseover="this.style.background='rgba(49, 130, 206, 0.18)'">
+                <span style="font-size: 14px;">🏠</span> 一键分房 (仅勾选项)
+                </button>
+            </div>
+            
+            <div style="position: relative; width: 280px;">
+                <input type="text" id="order-search" placeholder="搜名字/项目/技师..." oninput="renderAll()" 
+                       style="width: 100%; padding: 10px 12px 10px 38px; border: 1.5px solid #e2e8f0; border-radius: 12px; font-size: 14px; outline: none; transition: all 0.2s; background: #f8fafc;"
+                       onfocus="this.style.borderColor='#3182ce'; this.style.background='#fff'; this.style.boxShadow='0 0 0 3px rgba(49, 130, 206, 0.1)'"
+                       onblur="this.style.borderColor='#e2e8f0'; this.style.background='#f8fafc'; this.style.boxShadow='none'">
+                <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #a0aec0; font-size: 16px;">🔍</span>
+            </div>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 40px;">
+    <input type="checkbox" id="check-all" onclick="window.toggleAllOrders(this.checked)">
+</th>
+                    <th>时段</th>
+                    <th>房间</th>
+                    <th>技师</th>
+                    <th>项目内容</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="appointment-table-body"></tbody>
+        </table>
+    </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/ui-render.js"></script>
+<script src="js/ui-smart-logic.js"></script>
+<script src="js/ui-project-manager.js"></script>
+<script src="js/app-save-handler.js"></script>
+<script src="js/app-init.js"></script>
+
+
+<!-- 班次时间设置弹窗 -->
+<div id="shift-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); z-index:9999; justify-content:center; align-items:center;">
+    <div style="background:white; border-radius:16px; padding:28px; min-width:380px; box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h3 style="margin:0; color:#2D3748;">🕐 今日班次设置</h3>
+            <button onclick="window.closeShiftModal()" style="background:none; border:none; font-size:20px; cursor:pointer; color:#718096;">✕</button>
+        </div>
+        <div id="shift-modal-body"></div>
+        <button onclick="window.saveShiftTimes()" 
+            style="margin-top:20px; width:100%; padding:12px; background:#319795; color:white; border:none; border-radius:10px; font-size:15px; font-weight:bold; cursor:pointer;">
+            ✅ 保存班次
+        </button>
+    </div>
+</div>
+</body>
+</html>
