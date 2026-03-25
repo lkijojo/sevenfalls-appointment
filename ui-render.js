@@ -258,8 +258,9 @@ sbb.innerHTML += `
 
             if (isAttending) {
                 if (hideMale && s.name === "Russell") return; 
-                sb.innerHTML += `<div class="card available" onclick="window.showScoreDetail('${s.name}')" style="cursor:pointer;" title="点击查看积分明细"><b>${s.name}</b><br><span>${s.score}分</span></div>`;
-                const opt = `<option value="${s.name}">${s.name} (${s.score}分)</option>`;
+                const displayScore = Math.round(s.score * 10) / 10;
+                sb.innerHTML += `<div class="card available" onclick="window.showScoreDetail('${s.name}')" style="cursor:pointer;" title="点击查看积分明细"><b>${s.name}</b><br><span>${displayScore}分</span></div>`;
+                const opt = `<option value="${s.name}">${s.name} (${displayScore}分)</option>`;
                 s1.innerHTML += opt;
                 s2.innerHTML += opt; 
             }
@@ -649,7 +650,7 @@ window.showScoreDetail = (staffName) => {
                     <td style="padding:8px 10px;font-size:13px;font-weight:bold;color:#319795;text-align:right;white-space:nowrap;">
                         +${score}分
                         <button onclick="window.addBonusScore('${staffName}','${a.id}')" 
-                            style="margin-left:6px;background:#EBF8FF;border:1px solid #BEE3F8;color:#2B6CB0;border-radius:6px;padding:2px 7px;font-size:11px;cursor:pointer;font-weight:bold;">+0.2</button>
+                            style="margin-left:6px;background:#EBF8FF;border:1px solid #BEE3F8;color:#2B6CB0;border-radius:6px;padding:2px 7px;font-size:11px;cursor:pointer;font-weight:bold;">+0.1</button>
                     </td>
                 </tr>`;
         });
@@ -691,7 +692,7 @@ window.showScoreDetail = (staffName) => {
                 <td style="padding:8px 10px;font-size:13px;font-weight:bold;color:#319795;text-align:right;white-space:nowrap;">
                     <span id="score-val-${a.id}">+${score}分</span>
                     <button onclick="window.addBonusScore('${staffName}','${a.id}')" 
-                        style="margin-left:6px;background:#EBF8FF;border:1px solid #BEE3F8;color:#2B6CB0;border-radius:6px;padding:2px 7px;font-size:11px;cursor:pointer;font-weight:bold;">+0.2</button>
+                        style="margin-left:6px;background:#EBF8FF;border:1px solid #BEE3F8;color:#2B6CB0;border-radius:6px;padding:2px 7px;font-size:11px;cursor:pointer;font-weight:bold;">+0.1</button>
                     <button onclick="window.resetScore('${staffName}','${a.id}',${a.originalWeight || score})" 
                         style="margin-left:4px;background:#FFF5F5;border:1px solid #FED7D7;color:#C53030;border-radius:6px;padding:2px 7px;font-size:11px;cursor:pointer;font-weight:bold;">↩</button>
                 </td>
@@ -738,8 +739,8 @@ window.addBonusScore = async (staffName, apptId) => {
     // 记录原始分数（第一次加分时保存）
     if (appt.originalWeight === undefined) appt.originalWeight = appt.weight || 0;
 
-    // 加 0.2 分
-    appt.weight = Math.round(((appt.weight || 0) + 0.2) * 10) / 10;
+    // 加 0.1 分
+    appt.weight = Math.round(((appt.weight || 0) + 0.1) * 10) / 10;
 
     // 更新弹窗里的显示
     const scoreVal = document.getElementById(`score-val-${apptId}`);

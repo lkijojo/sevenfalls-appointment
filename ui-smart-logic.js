@@ -365,7 +365,8 @@ roomTimes.sort((a, b) => a - b).forEach(baseT => {
                     // 【紫色】换人后可约
                     div.style.background = "#FAF5FF";
                     div.style.border = "1.5px solid #805AD5";
-                    const swapNames = [...new Set(swapPlan.map(p => p.fromStaff))].join('/');
+                    const rawSwapNames = [...new Set(swapPlan.map(p => p.fromStaff))].join('/');
+                    const swapNames = rawSwapNames.length > 12 ? rawSwapNames.slice(0, 12) + '…' : rawSwapNames;
                     label = `<div style="font-size: 9px; font-weight: bold; color: #805AD5;">[🔄 换${swapNames}]</div>`;
                 } else if (needsRoom) {
                     const isGoldenGap = goldenNumbers.includes(gap);
@@ -391,7 +392,7 @@ roomTimes.sort((a, b) => a - b).forEach(baseT => {
                 const modeTag = (footDur > 0 && needsRoom) ?
                     `<div style="color:${modeColor}; font-size:10px; margin-top:2px; font-weight:bold;">[${mode.label}]</div>` : "";
 
-                div.innerHTML = `<b>${startTimeText}</b><small>${isSwappable ? '换后可约' : '剩' + availStaffCount + '人'}${label}${modeTag}</small>`;
+                div.innerHTML = `<b>${startTimeText}</b><small>${isFull && !isSwappable ? '' : '剩' + availStaffCount + '人'}</small><small style="line-height:1.2">${label}${modeTag}</small>`;
 
                 if (!isFull || isSwappable) {
                     div.onclick = async () => {
