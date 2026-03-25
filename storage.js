@@ -71,18 +71,40 @@ db.collection("spa_data").doc(date).set({
     // 📖 加载：先读本地，同时注册云端实时监听
     // =====================================================
     load: async (date) => {
-        // 1. 先从本地读（瞬间）
+        // 1. 先从本地读（作为备用）
         const localAppts  = JSON.parse(localStorage.getItem(`harmony_appts_${date}`) || '[]');
         const localScores = JSON.parse(localStorage.getItem(`harmony_scores_${date}`) || '{}');
         const localAtt    = JSON.parse(localStorage.getItem(`harmony_attendance_${date}`) || '{}');
 
-        // 2. 注册实时监听（如果还没监听这一天）
+        // 2. 每次都从 Firebase 拉最新数据（解决换日期后空白 + 旧缓存问题）
+        let appts = localAppts, scores = localScores, att = localAtt;
+        try {
+            const docSnap = await db.collection("spa_data").doc(date).get();
+            if (docSnap.exists) {
+                const data = docSnap.data();
+                appts  = JSON.parse(data.appts  || '[]');
+                scores = JSON.parse(data.scores || '{}');
+                att    = JSON.parse(data.att    || '{}');
+                // 同步到本地缓存
+                localStorage.setItem(`harmony_appts_${date}`,  JSON.stringify(appts));
+                localStorage.setItem(`harmony_scores_${date}`, JSON.stringify(scores));
+                localStorage.setItem(`harmony_attendance_${date}`, JSON.stringify(att));
+                if (data.shifts) {
+                    localStorage.setItem(`harmony_shifts_${date}`, data.shifts);
+                    window.staffShifts = JSON.parse(data.shifts);
+                }
+            }
+        } catch(e) {
+            console.warn("Firebase 拉取失败，使用本地缓存:", e);
+        }
+
+        // 3. 注册实时监听
         Storage.listenToDate(date);
 
         return {
-            appts: upgradeAppts(localAppts),
-            scores: localScores,
-            att: localAtt
+            appts: upgradeAppts(appts),
+            scores: scores,
+            att: att
         };
     },
 
