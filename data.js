@@ -25,7 +25,7 @@ const STAFF = [
     { name: "Ivy", score: 0 }, { name: "Tracy", score: 0 }, { name: "Mia", score: 0 },
     { name: "Jessie", score: 0 }, { name: "Vanessa", score: 0 }, { name: "Coco", score: 0 },
     { name: "Michelle", score: 0 }, { name: "Cat", score: 0 }, { name: "Helen", score: 0 },
-    { name: "Fei", score: 0 }, { name: "Russell", score: 0 }
+    { name: "Fei", score: 0 }, { name: "Russell", score: 0 }, { name: "Eva", score: 0 }
 ];
 
 // 2. 房间列表 (Room 1-4 为单人，Room 5 为情侣/通用)

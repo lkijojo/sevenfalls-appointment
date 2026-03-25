@@ -11,7 +11,7 @@ function renderAll() {
         "Ivy": "#14B8A6", "Tracy": "#D53F8C", "Russell": "#1D7DFC",
         "Mia": "#3B82F6", "Jessie": "#6366F1", "Vanessa": "#10B981",
         "Coco": "#84CC16", "Michelle": "#C2410C", "Cat": "#3730A3",
-        "Helen": "#D97706", "Fei": "#4A5568"
+        "Helen": "#D97706", "Fei": "#4A5568", "Eva": "#92400E"
     };
 
     
