@@ -78,6 +78,24 @@ if (attendance[s.name] === undefined) {
     if (window.updateSubItems) window.updateSubItems();
 });
 
+// 🚀 切换日期：不刷页面，直接重新加载数据
+window.switchDate = async (newDate) => {
+    if (!newDate) return;
+    history.replaceState(null, '', '?date=' + newDate);
+    window.editingId = null;
+    window.currentSelectedProjects = [];
+    if (typeof window.renderProjectList === 'function') window.renderProjectList();
+    let { appts, scores, att } = await Storage.load(newDate);
+    window.appointments = appts;
+    window.attendance = att;
+    STAFF.forEach(s => {
+        s.score = (scores && scores[s.name] !== undefined) ? scores[s.name] : 0;
+        if (att[s.name] === undefined) att[s.name] = (s.name !== "Fei");
+    });
+    if (window.loadShiftTimes) window.loadShiftTimes(newDate);
+    renderAll();
+};
+
 // 计算积分
 window.recalculateScores = () => {
     STAFF.forEach(s => s.score = 0); 
